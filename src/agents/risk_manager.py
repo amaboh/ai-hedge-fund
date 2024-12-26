@@ -9,6 +9,52 @@ import json
 import ast
 
 ##### Risk Management Agent #####
+def generate_risk_summary(risk_data):
+    """Generate human-readable summary of risk analysis."""
+    summary_parts = []
+    
+    # Risk Metrics Summary
+    metrics = risk_data["risk_metrics"]
+    metrics_summary = (
+        f"Risk Metrics Analysis:\n"
+        f"- Volatility: {metrics['volatility']:.1%} "
+        f"({'High' if metrics['volatility'] > 0.3 else 'Moderate' if metrics['volatility'] > 0.2 else 'Low'})\n"
+        f"- Value at Risk (95%): {metrics['value_at_risk_95']:.1%}\n"
+        f"- Maximum Drawdown: {metrics['max_drawdown']:.1%}\n"
+        f"- Market Risk Score: {metrics['market_risk_score']}/5"
+    )
+    summary_parts.append(metrics_summary)
+    
+    # Stress Test Results
+    stress_tests = metrics["stress_test_results"]
+    stress_summary = (
+        f"Stress Test Results:\n"
+        f"- Market Crash Scenario (-20%): ${stress_tests['market_crash']['potential_loss']:,.2f}\n"
+        f"- Moderate Decline (-10%): ${stress_tests['moderate_decline']['potential_loss']:,.2f}\n"
+        f"- Slight Decline (-5%): ${stress_tests['slight_decline']['potential_loss']:,.2f}"
+    )
+    summary_parts.append(stress_summary)
+    
+    # Position Size and Trading Action
+    position_summary = (
+        f"Position Management:\n"
+        f"- Maximum Position Size: ${risk_data['max_position_size']:,.2f}\n"
+        f"- Recommended Action: {risk_data['trading_action'].title()}\n"
+        f"- Risk Score: {risk_data['risk_score']}/10"
+    )
+    summary_parts.append(position_summary)
+    
+    # Overall Analysis
+    overall_text = (
+        f"\nRisk Management Summary:\n"
+        f"{risk_data['reasoning']}\n\n"
+        f"Based on the comprehensive risk analysis, "
+        f"{'extreme caution is warranted' if risk_data['risk_score'] >= 8 else 'moderate caution is advised' if risk_data['risk_score'] >= 5 else 'normal trading conditions prevail'}."
+    )
+    summary_parts.append(overall_text)
+    
+    return "\n\n".join(summary_parts)
+
 def risk_management_agent(state: AgentState):
     """Evaluates portfolio risk and sets position limits based on comprehensive risk analysis."""
     show_reasoning = state["metadata"]["show_reasoning"]
@@ -153,7 +199,15 @@ def risk_management_agent(state: AgentState):
     )
 
     if show_reasoning:
+        print("\n==========  Risk Management Summary  ==========")
+        text_summary = generate_risk_summary(message_content)
+        print(text_summary)
+        print("=" * 50)
+        
+        print("\n==========  Risk Management Details  ==========")
         show_agent_reasoning(message_content, "Risk Management Agent")
-
-    return {"messages": state["messages"] + [message]}
+    
+    return {
+        "messages": state["messages"] + [message],
+    }
 

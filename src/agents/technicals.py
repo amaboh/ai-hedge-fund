@@ -13,6 +13,63 @@ from tools.api import prices_to_df
 
 
 ##### Technical Analyst #####
+
+def generate_technical_summary(signal_data):
+    """Generate human-readable summary of technical analysis."""
+    trend = signal_data["strategy_signals"]["trend_following"]
+    mean_rev = signal_data["strategy_signals"]["mean_reversion"]
+    momentum = signal_data["strategy_signals"]["momentum"]
+    volatility = signal_data["strategy_signals"]["volatility"]
+    
+    summary_parts = []
+    
+    # Trend Following Summary
+    trend_text = (
+        f"Trend Analysis: {trend['signal'].title()} ({trend['confidence']}% confidence)\n"
+        f"- ADX indicates {'strong' if trend['metrics']['adx'] > 25 else 'weak'} trend at {trend['metrics']['adx']:.1f}"
+    )
+    summary_parts.append(trend_text)
+    
+    # Mean Reversion Summary
+    mean_rev_text = (
+        f"Mean Reversion Analysis: {mean_rev['signal'].title()} ({mean_rev['confidence']}% confidence)\n"
+        f"- RSI(14): {mean_rev['metrics']['rsi_14']:.1f} "
+        f"({'oversold' if mean_rev['metrics']['rsi_14'] < 30 else 'overbought' if mean_rev['metrics']['rsi_14'] > 70 else 'neutral'})\n"
+        f"- Price relative to Bollinger Bands: {mean_rev['metrics']['price_vs_bb']:.2%}"
+    )
+    summary_parts.append(mean_rev_text)
+    
+    # Momentum Summary
+    mom_metrics = momentum['metrics']
+    momentum_text = (
+        f"Momentum Analysis: {momentum['signal'].title()} ({momentum['confidence']}% confidence)\n"
+        f"- 1-Month Momentum: {mom_metrics['momentum_1m']:.1%}\n"
+        f"- Volume Momentum: {mom_metrics['volume_momentum']:.1f}x average"
+    )
+    summary_parts.append(momentum_text)
+    
+    # Volatility Summary
+    vol_metrics = volatility['metrics']
+    volatility_text = (
+        f"Volatility Analysis: {volatility['signal'].title()} ({volatility['confidence']}% confidence)\n"
+        f"- Historical Volatility: {vol_metrics['historical_volatility']:.1%}\n"
+        f"- ATR Ratio: {vol_metrics['atr_ratio']:.2%}"
+    )
+    summary_parts.append(volatility_text)
+    
+    # Overall Analysis
+    overall_text = (
+        f"\nOverall Technical Outlook: {signal_data['signal'].title()}\n"
+        f"Confidence: {signal_data['confidence']}\n"
+        "This analysis combines trend following, mean reversion, momentum, "
+        "volatility, and statistical arbitrage signals to form a comprehensive "
+        "technical view."
+    )
+    summary_parts.append(overall_text)
+    
+    return "\n\n".join(summary_parts)
+
+
 def technical_analyst_agent(state: AgentState):
     """
     Sophisticated technical analysis system that combines multiple trading strategies:
@@ -196,6 +253,12 @@ def technical_analyst_agent(state: AgentState):
     )
 
     if show_reasoning:
+        print("\n==========  Technical Analysis Summary  ==========")
+        text_summary = generate_technical_summary(analysis_report)
+        print(text_summary)
+        print("=" * 50)
+        
+        print("\n==========  Technical Analysis Details  ==========")
         show_agent_reasoning(analysis_report, "Technical Analyst")
     
     return {

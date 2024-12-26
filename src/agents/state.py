@@ -19,7 +19,9 @@ class AgentState(TypedDict):
 
 
 def show_agent_reasoning(output, agent_name):
+    """Display agent reasoning with enhanced error handling and debugging."""
     print(f"\n{'=' * 10} {agent_name.center(28)} {'=' * 10}")
+    
     
     def convert_to_serializable(obj):
         if hasattr(obj, 'to_dict'):  # Handle Pandas Series/DataFrame
@@ -35,17 +37,22 @@ def show_agent_reasoning(output, agent_name):
         else:
             return str(obj)  # Fallback to string representation
     
-    if isinstance(output, (dict, list)):
-        # Convert the output to JSON-serializable format
-        serializable_output = convert_to_serializable(output)
-        print(json.dumps(serializable_output, indent=2))
-    else:
-        try:
-            # Parse the string as JSON and pretty print it
-            parsed_output = json.loads(output)
-            print(json.dumps(parsed_output, indent=2))
-        except json.JSONDecodeError:
-            # Fallback to original string if not valid JSON
-            print(output)
+    try:
+        # If output is already a dict or list, convert and print
+        if isinstance(output, (dict, list)):
+            serializable_output = convert_to_serializable(output)
+            print(json.dumps(serializable_output, indent=2))
+        else:
+            # Try to parse string as JSON
+            try:
+                parsed_output = json.loads(output)
+                print(json.dumps(parsed_output, indent=2))
+            except json.JSONDecodeError as e:
+                print(f"\nDebug: JSON parsing error: {str(e)}")
+                print("Falling back to original string output:")
+                print(output)
+    except Exception as e:
+        print("Original output:")
+        print(output)
     
     print("=" * 48)
